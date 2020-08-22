@@ -6,6 +6,7 @@ const mongoose = require('mongoose')
 const blogRouter = require('./controlers/blogs')
 const logger = require('./utils/logger')
 const middleware = require('./utils/middleware')
+const usersRouter = require('./controlers/users')
 
 
 mongoose.connect(config.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -14,6 +15,7 @@ mongoose.connect(config.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: 
 
 app.use(cors())
 app.use(express.json())
+app.use('/api/users', usersRouter)
 app.use('/api/blogs', blogRouter)
 app.use(middleware.invalidPath)
 app.use(middleware.errorHandler)
