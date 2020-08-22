@@ -1,4 +1,5 @@
 const _ = require('lodash')
+const User = require('../models/users')
 const dummy = (blogs) => {
   return 1
 }
@@ -28,6 +29,11 @@ const mostLikes = (blogs) => {
   const obj = _.groupBy(blogs, 'author')
   const sumReducer = (init, obj) => init + Number(obj.likes)
   return _.max(Object.keys(obj).map( key => { return { author: key, total: obj[key].reduce(sumReducer,0) } }))
+}
+
+const usersInDb = async () => {
+  const allUsers = await User.find({})
+  return allUsers.map(user => user.toJSON())
 }
 
 
