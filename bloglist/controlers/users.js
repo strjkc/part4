@@ -18,4 +18,9 @@ usersController.post('/', async (request, response, next) => {
   }
 })
 
+usersController.get('/', async (request, response) => {
+  const allUsers = await User.find({})
+  response.send(allUsers)
+})
+
 module.exports = usersController
