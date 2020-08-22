@@ -1,6 +1,10 @@
 const listHelper = require('../utils/list_helper')
 const User = require('../models/users')
 const bcrypt = require('bcrypt')
+const supertest = require('supertest')
+const app = require('../app')
+const mongoose = require('mongoose')
+const api = supertest(app)
 
 test('Dummy returns 1', () => {
   const blogs = []
@@ -255,4 +259,57 @@ describe('Test user creation', () => {
     })
     await firstUser.save()
   })
+  test('User is created', async () => {
+    const initialUsers = await User.find({})
+
+    const newUser = {
+      username: 'newUser',
+      name: 'Mr New',
+      password: 'imjustapoorboyfromapoorfamily'
+    }
+
+    await api.post('/api/users')
+      .send(newUser)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+    const newUsers = await User.find({})
+    expect(newUsers.length).toBe(initialUsers.length + 1)
+  })
+
+  test('User with username < 3 chars can\'t be created', async () => {
+    const initialUsers = await User.find({})
+    const newUser = {
+      username: 'ne',
+      name: 'Mr New',
+      password: 'imjustapoorboyfromapoorfamily'
+    }
+
+    await api.post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+    const newUsers = await User.find({})
+    expect(newUsers.length).toBe(initialUsers.length)
+  })
+
+  test('User with password < 3 chars can\'t be created', async () => {
+    const initialUsers = await User.find({})
+    const newUser = {
+      username: 'newUser',
+      name: 'Mr New',
+      password: 'im'
+    }
+
+    await api.post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+    const newUsers = await User.find({})
+    expect(newUsers.length).toBe(initialUsers.length)
+  })
+
+})
+
+afterAll( () => {
+  mongoose.connection.close()
 })

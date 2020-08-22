@@ -16,7 +16,7 @@ usersController.post('/', async (request, response, next) => {
       passwordHash: passHash
     })
     const savedUser = await newUser.save()
-    response.json(savedUser)
+    response.status(201).json(savedUser)
   }catch(error){
     next(error)
   }
