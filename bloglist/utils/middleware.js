@@ -9,7 +9,16 @@ const invalidPath = (request, response) => {
   response.status(404).send({error: 'Unknown endpoint'})
 }
 
+const extractToken = (request) => {
+  const rawToken = request.get('authorization')
+  console.log('rawToken', rawToken)
+  if (rawToken && rawToken.toLowerCase().startsWith('bearer '))
+    return rawToken.substring(7)
+  return null
+}
+
 module.exports = {
   errorHandler,
-  invalidPath
+  invalidPath,
+  extractToken
 }
