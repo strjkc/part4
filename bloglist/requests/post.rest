@@ -1,8 +1,9 @@
-POST http://localhost:3003/api/users
+POST http://localhost:3003/api/blogs
 Content-Type: application/json
-
+Authorization: "bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU3RyYWhpbmphIEpva2ljIiwiaWQiOiI1ZjQxNjAzZjhkZTUzNjgyZmFkOGU1NDQiLCJpYXQiOjE1OTgzODA5MTB9.kbs7c284dmrO6EZ_J5-HP1tPJx9Fw-bbEl3V0rukqRE"
 {
- "name": "Strahinja Jokic",
- "username": "strahinja",
- "password": "sifra12"
+ "title": "test25",
+ "author": "straja",
+ "url": "http://somelink.com",
+ "likes": "23"
 }
