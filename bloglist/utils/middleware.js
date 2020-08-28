@@ -14,8 +14,10 @@ const extractToken = (request, response, next) => {
   if (rawToken)
     {
       request.token = rawToken.substring(7)
-      console.log(request.token)
     }
+  else
+    request.token = null
+  console.log(request.token)
     
   next()
 }

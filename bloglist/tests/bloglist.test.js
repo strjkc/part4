@@ -5,6 +5,7 @@ const supertest = require('supertest')
 const app = require('../app')
 const mongoose = require('mongoose')
 const api = supertest(app)
+const Blog = require('../models/blogs')
 
 test('Dummy returns 1', () => {
   const blogs = []
@@ -308,6 +309,29 @@ describe('Test user creation', () => {
     expect(newUsers.length).toBe(initialUsers.length)
   })
 
+})
+
+describe('a new blog can be added', () => {
+  test('a blog can\'t be added without an authentication token ', async () => {
+    const newBlog = {
+      title: 'New Test blog',
+      author: 'Test user',
+      url: 'http://someurl.com',
+      likes: '234'
+    }
+
+    const blogsInitial = await Blog.find({})
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(401)
+      .expect('Content-Type', /application\/json/)
+
+    const blogsUpdated = await Blog.find({})
+
+    expect(blogsUpdated.length).toEqual(blogsInitial.length)
+  })
 })
 
 afterAll( () => {
