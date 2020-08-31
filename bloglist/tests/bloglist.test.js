@@ -311,11 +311,61 @@ describe('Test user creation', () => {
 
 })
 
+describe('blogs can be retrieved', () => {
+  beforeEach( async () => {
+    const user = await User.findOne({})
+    await Blog.deleteMany({})
+    const newBlog = new Blog({
+      title: 'Initial Blog',
+      author: 'Before Each function',
+      content: 'This is a new blog post',
+      url: 'http://thisisfake.com',
+      likes: '432',
+      user: user._id
+
+    })    
+    await newBlog.save()
+  })
+  test('all blogs can be retreived', async () => {
+    const allBlogs = await Blog.find({})
+    const blogsFromApi = await api.get('/api/blogs')
+                                .expect(200)
+                                .expect('Content-Type', /application\/json/)
+    expect(blogsFromApi.body.length).toBe(allBlogs.length)
+  })
+
+  test('blogs contain "id" property', async () => {
+    const blogs = await Blog.find({})
+    const jsonBlogs = blogs.map(blog => JSON.parse(JSON.stringify(blog)))
+    console.log('BLOGS', jsonBlogs)
+    jsonBlogs.forEach(blog => expect(blog.id).toBeDefined())
+  })
+})
+
 describe('a new blog can be added', () => {
+  let token = null
+  beforeEach( async () => {
+    const user = await User.findOne({})
+    await Blog.deleteMany({})
+    const newBlog = new Blog({
+      title: 'Initial Blog',
+      author: 'Before Each function',
+      content: 'This is a new blog post',
+      url: 'http://thisisfake.com',
+      likes: '432',
+      user: user._id
+
+    })    
+    await newBlog.save()
+    const logIn = await api.post('/api/login')
+    .send({username: user.username, password: 'root'})
+    token = `bearer ${logIn.body.token}`
+  })
   test('a blog can\'t be added without an authentication token ', async () => {
     const newBlog = {
       title: 'New Test blog',
       author: 'Test user',
+      content: 'This is a blog post added by the test',
       url: 'http://someurl.com',
       likes: '234'
     }
@@ -331,6 +381,45 @@ describe('a new blog can be added', () => {
     const blogsUpdated = await Blog.find({})
 
     expect(blogsUpdated.length).toEqual(blogsInitial.length)
+  })
+
+  test('a new blog can be added', async () => {
+    const initialBlogs = await Blog.find({}) 
+    const newBlog = {
+      title: 'New Test blog',
+      author: 'Test user',
+      content: 'This is a blog post added by the test',
+      url: 'http://someurl.com',
+      likes: '234'
+    }
+    const savedBlog = await api.post('/api/blogs')
+    .set('Authorization', token)
+    .send(newBlog)
+    .expect(201)
+    .expect('Content-Type', /application\/json/)
+    const updatedBlogs = await Blog.find({})
+    expect(updatedBlogs.length).toBe(initialBlogs.length + 1)
+    expect(savedBlog.body.content).toBe('This is a blog post added by the test')
+  })
+
+  test('likes defaults to 0', async () => {
+    const initialBlogs = await Blog.find({}) 
+    const newBlog = {
+      title: 'New Test blog',
+      author: 'Test user',
+      content: 'This is a blog post added by the test',
+      url: 'http://someurl.com',
+    }
+
+    const savedBlog = await api.post('/api/blogs')
+                              .set('Authorization', token)
+                              .send(newBlog)
+                              .expect(201)
+                              .expect('Content-Type', /application\/json/)
+    const updatedBlogs = await Blog.find({})
+
+    expect(updatedBlogs.length).toBe(initialBlogs.length + 1)
+    expect(Number(savedBlog.body.likes)).toBe(0)
   })
 })
 

@@ -15,9 +15,6 @@ const extractToken = (request, response, next) => {
     {
       request.token = rawToken.substring(7)
     }
-  else
-    request.token = null
-  console.log(request.token)
     
   next()
 }
