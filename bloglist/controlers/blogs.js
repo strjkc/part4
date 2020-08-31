@@ -5,7 +5,6 @@ const jwt = require('jsonwebtoken')
 
 
 blogRouter.get('/', (request, response) => {
-  console.log('???')
   Blog
     .find({})
     .then(blogs => {

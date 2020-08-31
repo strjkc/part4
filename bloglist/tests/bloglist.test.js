@@ -337,7 +337,6 @@ describe('blogs can be retrieved', () => {
   test('blogs contain "id" property', async () => {
     const blogs = await Blog.find({})
     const jsonBlogs = blogs.map(blog => JSON.parse(JSON.stringify(blog)))
-    console.log('BLOGS', jsonBlogs)
     jsonBlogs.forEach(blog => expect(blog.id).toBeDefined())
   })
 })
@@ -420,6 +419,23 @@ describe('a new blog can be added', () => {
 
     expect(updatedBlogs.length).toBe(initialBlogs.length + 1)
     expect(Number(savedBlog.body.likes)).toBe(0)
+  })
+
+  test('blog can\'t be added without author or title', async () => {
+    const initialBlogs = await Blog.find({})
+    const newBlog = {
+      content: 'This is a blog post added by the test',
+      url: 'http://someurl.com',
+    }
+
+    const savedBlog = await api.post('/api/blogs')
+                              .set('Authorization', token)
+                              .send(newBlog)
+                              .expect(400)
+                              .expect('Content-Type', /application\/json/)
+    const updatedBlogs = await Blog.find({})
+
+    expect(updatedBlogs.length).toBe(initialBlogs.length)
   })
 })
 
