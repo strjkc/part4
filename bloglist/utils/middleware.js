@@ -13,7 +13,7 @@ const extractToken = (request, response, next) => {
   const rawToken = request.get('authorization')
   if (rawToken)
     {
-      request.token = rawToken.substring(7)
+      request.token = rawToken.substring(7).trim()
     }
     
   next()

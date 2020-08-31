@@ -6,6 +6,7 @@ const app = require('../app')
 const mongoose = require('mongoose')
 const api = supertest(app)
 const Blog = require('../models/blogs')
+const { set } = require('../app')
 
 test('Dummy returns 1', () => {
   const blogs = []
@@ -436,6 +437,70 @@ describe('a new blog can be added', () => {
     const updatedBlogs = await Blog.find({})
 
     expect(updatedBlogs.length).toBe(initialBlogs.length)
+  })
+})
+describe('blogs can be deleted', () => {
+  let token = null
+  beforeEach( async () => {
+    const user = await User.findOne({})
+    user.blogs = []
+    await Blog.deleteMany({})
+    const newBlog = new Blog({
+      title: 'Initial Blog',
+      author: 'Before Each function',
+      content: 'This is a new blog post',
+      url: 'http://thisisfake.com',
+      likes: '432',
+      user: user._id
+    })    
+    const savedBlog = await newBlog.save()
+    user.blogs = user.blogs.concat(savedBlog._id)
+    await user.save()
+    const logIn = await api.post('/api/login')
+    .send({username: user.username, password: 'root'})
+    token = `bearer ${logIn.body.token}`
+    console.log('TESTS BEFOREACH received token', token)
+  })
+  test('a blog can be deleted', async () => {
+    const user = await User.findOne({})
+    const initialBlogs = await Blog.find({})
+    const noteId = user.blogs[0]
+    const note = await Blog.findById(noteId)
+    await api.delete(`/api/blogs/${noteId}`)
+            .set('Authorization', token)
+            .expect(204)
+    const updatedBlogs = await Blog.find({})
+    expect(updatedBlogs.length).toBe(initialBlogs.length - 1)
+  })
+})
+describe('blogs can be updated', () => {
+  beforeEach( async () => {
+    const user = await User.findOne({})
+    user.blogs = []
+    await Blog.deleteMany({})
+    const newBlog = new Blog({
+      title: 'Initial Blog',
+      author: 'Before Each function',
+      content: 'This is a new blog post',
+      url: 'http://thisisfake.com',
+      likes: '432',
+      user: user._id
+    })    
+    const savedBlog = await newBlog.save()
+    user.blogs = user.blogs.concat(savedBlog._id)
+    await user.save()
+    const logIn = await api.post('/api/login')
+    .send({username: user.username, password: 'root'})
+    token = `bearer ${logIn.body.token}`
+  })
+  test('amount of likes can be updated', async () => {
+    const user = await User.findOne({})
+    console.log('Test USER', user)
+    const blogId = user.blogs[0]
+    const initialBlog = await Blog.findById(blogId)
+    const updatedBlog = await api.put(`/api/blogs/${blogId}`)
+                                  .expect(201)
+    expect(Number(updatedBlog.body.likes)).toBe(Number(initialBlog.likes) + 1)
   })
 })
 

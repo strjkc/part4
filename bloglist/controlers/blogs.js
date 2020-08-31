@@ -18,7 +18,7 @@ blogRouter.post('/', async (request, response, next) => {
     ? false
     : jwt.verify(token, process.env.SECRET)
     if (!token || !validUser)
-    return response.status(401).json({error: 'Token missing or invalid'})
+      return response.status(401).json({error: 'Token missing or invalid'})
     const user = await User.findById(validUser.id)
     const blog = { ...request.body, likes: request.body.likes || 0 }
     blog.user = user._id
@@ -33,11 +33,14 @@ blogRouter.post('/', async (request, response, next) => {
 blogRouter.delete('/:id', async (request, response) => {
   const blogId = request.params.id
   const token = request.token
-  const validUser = token === null
+  const validUser = token === undefined
   ? false
   : jwt.verify(token, process.env.SECRET)
   if (!token || !validUser)
+  {
+    console.log('BLOGSrouter: Token invalid')
     return response.status(401).json({error: 'Token missing or invalid'})
+  }
   const user = await User.findById(validUser.id)
   if (!user.blogs.includes(blogId))
     return response.status(400).json({error: 'Note doesn\'t belong to the user'})
@@ -45,6 +48,16 @@ blogRouter.delete('/:id', async (request, response) => {
   await user.save()
   await Blog.findByIdAndRemove(blogId)
   response.status(204).end()
+})
+
+blogRouter.put('/:id', async (request, response) => {
+  const blogId = request.params.id
+  if (!blogId)
+    return response.status(400).json({error: 'Malformed request'})
+  const blog = await Blog.findById(blogId)
+  blog.likes = String(Number(blog.likes) + 1)
+  const updatedBlog = await blog.save()
+  response.status(201).send(updatedBlog)
 })
 
 module.exports = blogRouter
