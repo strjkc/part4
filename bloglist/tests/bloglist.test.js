@@ -8,6 +8,28 @@ const api = supertest(app)
 const Blog = require('../models/blogs')
 const { set } = require('../app')
 
+let token = null
+beforeEach( async () => {
+  const user = await User.findOne({})
+  user.blogs = []
+  await Blog.deleteMany({})
+  const newBlog = new Blog({
+    title: 'Initial Blog',
+    author: 'Before Each function',
+    content: 'This is a new blog post',
+    url: 'http://thisisfake.com',
+    likes: '432',
+    user: user._id
+  })    
+  const savedBlog = await newBlog.save()
+  user.blogs = user.blogs.concat(savedBlog._id)
+  await user.save()
+  const logIn = await api.post('/api/login')
+  .send({username: user.username, password: 'root'})
+  token = `bearer ${logIn.body.token}`
+})
+
+
 test('Dummy returns 1', () => {
   const blogs = []
   const result = listHelper.dummy(blogs)
@@ -244,23 +266,13 @@ describe('Favorite blog', () => {
       likes: "1000",
       __v: 0
     }]
-    // strahinja: 4000 marko: 300 me: 10
     const result = listHelper.mostLikes(blogs)
     expect(result).toEqual({ author: 'Strahinja', total: 4000 })
   })
 })
 
 describe('Test user creation', () => {
-  beforeEach( async () => {
-    await User.deleteMany({})
-    const passHash = await bcrypt.hash('root', 10)
-    const firstUser = new User({
-      name: 'root',
-      username: 'root',
-      passwordHash: passHash
-    })
-    await firstUser.save()
-  })
+
   test('User is created', async () => {
     const initialUsers = await User.find({})
 
@@ -313,21 +325,7 @@ describe('Test user creation', () => {
 })
 
 describe('blogs can be retrieved', () => {
-  beforeEach( async () => {
-    const user = await User.findOne({})
-    await Blog.deleteMany({})
-    const newBlog = new Blog({
-      title: 'Initial Blog',
-      author: 'Before Each function',
-      content: 'This is a new blog post',
-      url: 'http://thisisfake.com',
-      likes: '432',
-      user: user._id
-
-    })    
-    await newBlog.save()
-  })
-  test('all blogs can be retreived', async () => {
+   test('all blogs can be retreived', async () => {
     const allBlogs = await Blog.find({})
     const blogsFromApi = await api.get('/api/blogs')
                                 .expect(200)
@@ -343,24 +341,7 @@ describe('blogs can be retrieved', () => {
 })
 
 describe('a new blog can be added', () => {
-  let token = null
-  beforeEach( async () => {
-    const user = await User.findOne({})
-    await Blog.deleteMany({})
-    const newBlog = new Blog({
-      title: 'Initial Blog',
-      author: 'Before Each function',
-      content: 'This is a new blog post',
-      url: 'http://thisisfake.com',
-      likes: '432',
-      user: user._id
-
-    })    
-    await newBlog.save()
-    const logIn = await api.post('/api/login')
-    .send({username: user.username, password: 'root'})
-    token = `bearer ${logIn.body.token}`
-  })
+ 
   test('a blog can\'t be added without an authentication token ', async () => {
     const newBlog = {
       title: 'New Test blog',
@@ -440,27 +421,7 @@ describe('a new blog can be added', () => {
   })
 })
 describe('blogs can be deleted', () => {
-  let token = null
-  beforeEach( async () => {
-    const user = await User.findOne({})
-    user.blogs = []
-    await Blog.deleteMany({})
-    const newBlog = new Blog({
-      title: 'Initial Blog',
-      author: 'Before Each function',
-      content: 'This is a new blog post',
-      url: 'http://thisisfake.com',
-      likes: '432',
-      user: user._id
-    })    
-    const savedBlog = await newBlog.save()
-    user.blogs = user.blogs.concat(savedBlog._id)
-    await user.save()
-    const logIn = await api.post('/api/login')
-    .send({username: user.username, password: 'root'})
-    token = `bearer ${logIn.body.token}`
-    console.log('TESTS BEFOREACH received token', token)
-  })
+  
   test('a blog can be deleted', async () => {
     const user = await User.findOne({})
     const initialBlogs = await Blog.find({})
@@ -474,25 +435,6 @@ describe('blogs can be deleted', () => {
   })
 })
 describe('blogs can be updated', () => {
-  beforeEach( async () => {
-    const user = await User.findOne({})
-    user.blogs = []
-    await Blog.deleteMany({})
-    const newBlog = new Blog({
-      title: 'Initial Blog',
-      author: 'Before Each function',
-      content: 'This is a new blog post',
-      url: 'http://thisisfake.com',
-      likes: '432',
-      user: user._id
-    })    
-    const savedBlog = await newBlog.save()
-    user.blogs = user.blogs.concat(savedBlog._id)
-    await user.save()
-    const logIn = await api.post('/api/login')
-    .send({username: user.username, password: 'root'})
-    token = `bearer ${logIn.body.token}`
-  })
   test('amount of likes can be updated', async () => {
     const user = await User.findOne({})
     console.log('Test USER', user)
