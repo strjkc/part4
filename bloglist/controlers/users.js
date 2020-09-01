@@ -2,8 +2,7 @@ const usersController = require('express').Router()
 const bcrypt = require('bcrypt')
 const User = require('../models/users')
 
-usersController.post('/', async (request, response, next) => {
-  try{
+usersController.post('/', async (request, response) => {
     const saltRounds = 10
     if (request.body.password.length < 3)
     {
@@ -17,13 +16,12 @@ usersController.post('/', async (request, response, next) => {
     })
     const savedUser = await newUser.save()
     response.status(201).json(savedUser)
-  }catch(error){
-    next(error)
-  }
 })
 
 usersController.get('/', async (request, response) => {
   const allUsers = await User.find({})
+  if (allUsers === null)
+    return response.status(404).json({error: 'No users found'})
   response.send(allUsers)
 })
 

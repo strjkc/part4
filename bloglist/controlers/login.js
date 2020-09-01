@@ -4,7 +4,6 @@ const User = require('../models/users')
 const bcrypt = require('bcrypt')
 
 loginRouter.post('/', async (request, response) => {
-  try{
     const body = request.body
     const user = await User.findOne({ username: body.username })
     const passwordCorrect = user === null
@@ -18,9 +17,6 @@ loginRouter.post('/', async (request, response) => {
     }
     const token = jwt.sign(userForToken, process.env.SECRET)
     response.send({ token, username: user.username, name: user.name })
-  }catch(error) {
-    console.log(error)
-  }
 })
 
 module.exports = loginRouter
